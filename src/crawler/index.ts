@@ -1,5 +1,6 @@
 ﻿import type { Page } from 'puppeteer'
 
+import { extractContracts, uniqueContracts } from './contracts'
 import type { CrawlContext, CrawlResult, ProcessContext } from './types'
 
 const maxDepth = 10
@@ -43,7 +44,7 @@ export async function crawl(
       await crawlDocs(page, context.result.documentationHome, context)
     }
   } catch (e) {
-    console.log(`Error crawling ${url}:`, e instanceof Error ? e.message : e)
+    console.error(`Error crawling ${url}:`, e instanceof Error ? e.message : e)
   } finally {
     if (!page.isClosed()) {
       await page.close()
@@ -100,6 +101,12 @@ async function crawlDocs(
   if (!links) {
     return
   }
+
+  const deployments = await extractContracts(page)
+  context.result.contractDeployments = uniqueContracts([
+    ...deployments,
+    ...context.result.contractDeployments,
+  ])
 
   for (const link of links) {
     if (
@@ -161,10 +168,12 @@ function extractSocialLinks(links: Set<string>, context: CrawlContext) {
   for (const link of links) {
     if (link.includes('discord')) {
       context.result.discord.add(link)
-    } else if (link.includes('twitter')) {
-      context.result.twitter.add(link.toLowerCase())
-    } else if (link.includes('github')) {
-      context.result.github.add(link.toLowerCase())
+    } else if (link.includes('https://twitter.com/')) {
+      const username = link.split('/')[3]
+      context.result.twitter.add(`https://twitter.com/${username}`)
+    } else if (link.startsWith('https://github.com/')) {
+      const org = link.split('/')[3]
+      context.result.github.add(`https://github.com/${org}`)
     } else if (link.includes('t.me') || link.includes('telegram')) {
       context.result.telegram.add(link)
     } else if (
