@@ -1,4 +1,4 @@
-﻿export type TableMeta = {
+﻿export type ElementMeta = {
   selector: string
   innerTextHash: string
   pageUrl: string
@@ -11,7 +11,7 @@ export type ContractDeployment = {
   chainId?: number
   address: string
   abi?: string
-  tableMeta?: TableMeta
+  pageElementMeta?: ElementMeta
 }
 
 export type CrawlResult = {
