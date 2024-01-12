@@ -58,11 +58,7 @@ async function main() {
     defaultViewport: null,
   })
   try {
-    const results = await crawlProtocols(
-      browser,
-      protocolUrls.filter((u) => samples.some((s) => u.includes(s))),
-    )
-    console.log('results:', JSON.stringify(results, null, 2))
+    await crawlProtocols(browser, protocolUrls)
   } finally {
     await browser.close()
   }
@@ -72,14 +68,3 @@ main().catch((err) => {
   console.error(err)
   throw err
 })
-
-const samples = [
-  'uniswap',
-  'gho',
-  'aave',
-  'compound',
-  'convex',
-  'curve',
-  'balancer',
-  'lido',
-]
