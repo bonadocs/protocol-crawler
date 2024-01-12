@@ -1,8 +1,17 @@
-﻿export type ContractDeployment = {
+﻿export type TableMeta = {
+  selector: string
+  innerTextHash: string
+  pageUrl: string
+  pageTitle: string
+  nearestHeading?: string
+}
+
+export type ContractDeployment = {
   name?: string
   chainId?: number
   address: string
   abi?: string
+  tableMeta?: TableMeta
 }
 
 export type CrawlResult = {
