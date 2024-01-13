@@ -44,7 +44,7 @@ export async function crawl(
       await crawlDocs(page, context.result.documentationHome, context)
     }
   } catch (e) {
-    console.error(`Error crawling ${url}:`, e instanceof Error ? e.message : e)
+    console.error(`Error crawling ${url}:`, e)
   } finally {
     if (!page.isClosed()) {
       await page.close()
@@ -256,7 +256,9 @@ function constructContext(
         )
       },
       toJSON: function () {
-        return this.hasSocials() || this.documentationHome
+        return this.hasSocials() ||
+          this.documentationHome ||
+          this.contractDeployments.length
           ? {
               rootUrl: this.rootUrl,
               github: this.github.size ? Array.from(this.github) : undefined,
