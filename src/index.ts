@@ -7,19 +7,34 @@ import { crawl } from './crawler'
 import type { CrawlResult, ProcessContext } from './crawler/types'
 import protocolUrls from './protocol-urls.json'
 
+const crawledProtocolsFile = path.resolve('./crawled-protocols.json')
+const crawledProtocolsBackupFile = path.resolve(
+  './crawled-protocols-backup.json',
+)
+
 function writeResults(results: CrawlResult[]) {
-  const resultPath = path.resolve('./crawled-protocols.json')
+  const resultPath = path.resolve(crawledProtocolsFile)
   results = JSON.parse(JSON.stringify(results)).filter(Boolean)
   const data = JSON.stringify(results, null, 2)
   fs.writeFileSync(resultPath, data)
 }
 
+function getCrawledProtocols(): CrawlResult[] {
+  try {
+    return JSON.parse(fs.readFileSync(crawledProtocolsFile, 'utf8'))
+  } catch {
+    return []
+  }
+}
+
 async function crawlProtocols(
   browser: Browser,
   urls: string[],
-  maxSimultaneousCrawls = 30,
+  results: CrawlResult[] = [],
+  maxSimultaneousCrawls = 40,
 ): Promise<CrawlResult[]> {
-  const queue = [...urls]
+  const crawledUrls = new Set(results.map((p: CrawlResult) => p.rootUrl))
+  const queue = urls.filter((url) => !crawledUrls.has(url))
   const inProgress = new Set<string>()
   const completed = new Set<string>()
 
@@ -28,7 +43,6 @@ async function crawlProtocols(
     await page.close()
   }
 
-  const results: CrawlResult[] = []
   const context: ProcessContext = {
     visited: new Set(),
   }
@@ -58,7 +72,13 @@ async function main() {
     defaultViewport: null,
   })
   try {
-    await crawlProtocols(browser, protocolUrls)
+    const crawledProtocols = getCrawledProtocols()
+    fs.writeFileSync(
+      crawledProtocolsBackupFile,
+      JSON.stringify(crawledProtocols),
+    )
+
+    await crawlProtocols(browser, protocolUrls, crawledProtocols)
   } finally {
     await browser.close()
   }
