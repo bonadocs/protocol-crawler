@@ -155,8 +155,10 @@ async function crawlSingleURL(page: Page, url: string, context: CrawlContext) {
 
 async function openURL(page: Page, url: string): Promise<Page | undefined> {
   try {
-    await page.goto(url, { waitUntil: 'networkidle2' })
-    await page.waitForSelector('body')
+    await page.goto(url, {
+      waitUntil: ['networkidle2', 'domcontentloaded'],
+    })
+    await page.waitForSelector('a')
     return page
   } catch (e) {
     // link is down
